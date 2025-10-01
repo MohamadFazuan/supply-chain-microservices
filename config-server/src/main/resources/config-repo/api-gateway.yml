@@ -1,0 +1,59 @@
+# API Gateway Configuration
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=2
+        - id: credential-service
+          uri: lb://credential-service
+          predicates:
+            - Path=/api/credentials/**
+          filters:
+            - StripPrefix=2
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=2
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+# Rate limiting configuration
+spring.cloud.gateway:
+  filter:
+    request-rate-limiter:
+      redis-rate-limiter:
+        replenish-rate: 10
+        burst-capacity: 20
+        requested-tokens: 1
+
+# Security configuration for gateway
+security:
+  ignored-paths:
+    - /api/auth/login
+    - /api/auth/register
+    - /actuator/health
+    - /actuator/info

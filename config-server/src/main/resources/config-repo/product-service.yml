@@ -1,0 +1,37 @@
+# Product Service Configuration
+server:
+  port: 8082
+
+spring:
+  application:
+    name: product-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/product_db
+    username: product_user
+    password: product_pass
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutes
+
+# Product service specific configurations
+product:
+  cache:
+    ttl: 600  # seconds
+    enabled: true
+  inventory:
+    low-stock-threshold: 10
+    auto-reorder: true
+  pricing:
+    enable-dynamic-pricing: true
+    margin-percentage: 20
+
+# RabbitMQ queues for product service
+rabbitmq:
+  queues:
+    product-events: product.events
+    inventory-updates: inventory.updates
+    price-changes: price.changes
+  exchanges:
+    product-exchange: product.exchange
+    inventory-exchange: inventory.exchange

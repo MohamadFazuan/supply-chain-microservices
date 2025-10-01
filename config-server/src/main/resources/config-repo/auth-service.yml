@@ -1,0 +1,36 @@
+# Auth Service Configuration
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth_db
+    username: auth_user
+    password: auth_pass
+
+jwt:
+  secret: myVerySecretKeyForJWTTokenGenerationAndValidation123456789
+  expiration: 86400  # 24 hours
+  refresh-expiration: 604800  # 7 days
+
+oauth2:
+  clients:
+    - client-id: supply-chain-web
+      client-secret: web-secret
+      scope: read,write
+      grant-types: authorization_code,refresh_token
+      redirect-uris: http://localhost:3000/callback
+    - client-id: supply-chain-mobile
+      client-secret: mobile-secret
+      scope: read,write
+      grant-types: password,refresh_token
+
+security:
+  password:
+    min-length: 8
+    require-uppercase: true
+    require-lowercase: true
+    require-numbers: true
+    require-special-chars: true
