@@ -1,0 +1,67 @@
+# AI Service Configuration
+server:
+  port: 8084
+
+spring:
+  application:
+    name: ai-service
+
+# AI Provider configurations
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: gpt-3.5-turbo
+    enabled: false
+    timeout: 30s
+    max-retries: 3
+  
+  azure-openai:
+    endpoint: ${AZURE_OPENAI_ENDPOINT:}
+    api-key: ${AZURE_OPENAI_API_KEY:}
+    deployment-name: ${AZURE_OPENAI_DEPLOYMENT:}
+    enabled: false
+    timeout: 30s
+  
+  ollama:
+    base-url: http://localhost:11434
+    model: llama2
+    enabled: true
+    timeout: 60s
+  
+  huggingface:
+    api-key: ${HUGGINGFACE_API_KEY:}
+    enabled: false
+    timeout: 30s
+
+# AI service specific configurations
+ai-service:
+  cache:
+    ttl: 3600  # 1 hour
+    enabled: true
+  
+  rate-limiting:
+    requests-per-minute: 100
+    burst-capacity: 150
+  
+  request-processing:
+    timeout: 120s
+    max-concurrent-requests: 50
+  
+  providers:
+    fallback-enabled: true
+    auto-selection: true
+    priority-order: openai,azure-openai,ollama,huggingface
+  
+  content-filtering:
+    enabled: true
+    profanity-filter: true
+    safety-check: true
+
+# RabbitMQ queues for AI service
+rabbitmq:
+  queues:
+    ai-requests: ai.requests
+    ai-responses: ai.responses
+    ai-analytics: ai.analytics
+  exchanges:
+    ai-exchange: ai.exchange
