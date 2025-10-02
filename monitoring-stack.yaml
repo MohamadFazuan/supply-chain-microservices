@@ -1,0 +1,145 @@
+# Monitoring Infrastructure Stack
+# Add this to your existing compose.yaml or create monitoring-stack.yaml
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # PROMETHEUS - Metrics Collection
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: supply-chain-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    networks:
+      - supply-chain-network
+
+  # ============================================================================
+  # GRAFANA - Metrics Visualization
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: supply-chain-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - supply-chain-network
+    depends_on:
+      - prometheus
+
+  # ============================================================================
+  # ELASTICSEARCH - Log Storage
+  # ============================================================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: supply-chain-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - supply-chain-network
+
+  # ============================================================================
+  # LOGSTASH - Log Processing
+  # ============================================================================
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: supply-chain-logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./monitoring/logstash/config:/usr/share/logstash/config
+      - ./logs:/logs:ro
+    networks:
+      - supply-chain-network
+    depends_on:
+      - elasticsearch
+
+  # ============================================================================
+  # KIBANA - Log Visualization
+  # ============================================================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: supply-chain-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - supply-chain-network
+    depends_on:
+      - elasticsearch
+
+  # ============================================================================
+  # ZIPKIN - Distributed Tracing
+  # ============================================================================
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: supply-chain-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - supply-chain-network
+
+  # ============================================================================
+  # JAEGER - Alternative Tracing (Optional)
+  # ============================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: supply-chain-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    networks:
+      - supply-chain-network
+
+  # ============================================================================
+  # ALERTMANAGER - Alert Management
+  # ============================================================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: supply-chain-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    networks:
+      - supply-chain-network
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  supply-chain-network:
+    external: true

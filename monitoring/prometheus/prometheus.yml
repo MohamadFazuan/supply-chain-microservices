@@ -1,0 +1,127 @@
+# Prometheus Configuration
+# Path: monitoring/prometheus/prometheus.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  # ============================================================================
+  # Prometheus Self-Monitoring
+  # ============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ============================================================================
+  # Supply Chain Microservices
+  # ============================================================================
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['eureka-server:8761']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'eureka-server'
+
+  - job_name: 'config-server'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['config-server:8888']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'config-server'
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['api-gateway:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'api-gateway'
+
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['auth-service:0']  # Dynamic port
+    eureka_sd_configs:
+      - server: http://eureka-server:8761/eureka
+    relabel_configs:
+      - source_labels: [__meta_eureka_app_name]
+        target_label: application
+      - source_labels: [__meta_eureka_app_instance_metadata_management_port]
+        target_label: __address__
+        replacement: '${1}'
+      - target_label: __metrics_path__
+        replacement: /actuator/prometheus
+
+  - job_name: 'product-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    eureka_sd_configs:
+      - server: http://eureka-server:8761/eureka
+    relabel_configs:
+      - source_labels: [__meta_eureka_app_name]
+        regex: PRODUCT-SERVICE
+        target_label: application
+      - source_labels: [__meta_eureka_app_instance_metadata_management_port]
+        target_label: __address__
+        replacement: '${1}'
+
+  - job_name: 'credential-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 20s
+    eureka_sd_configs:
+      - server: http://eureka-server:8761/eureka
+    relabel_configs:
+      - source_labels: [__meta_eureka_app_name]
+        regex: CREDENTIAL-SERVICE
+        target_label: application
+
+  - job_name: 'ai-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    eureka_sd_configs:
+      - server: http://eureka-server:8761/eureka
+    relabel_configs:
+      - source_labels: [__meta_eureka_app_name]
+        regex: AI-SERVICE
+        target_label: application
+
+  # ============================================================================
+  # Infrastructure Components
+  # ============================================================================
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:9104']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:9121']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  # ============================================================================
+  # Node Exporter (System Metrics)
+  # ============================================================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

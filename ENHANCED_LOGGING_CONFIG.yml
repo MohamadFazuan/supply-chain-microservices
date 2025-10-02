@@ -1,0 +1,87 @@
+# Enhanced Logging Configuration for all services
+# Add this to: config-server/src/main/resources/config-repo/application.yml
+
+# ===================================================================
+# LOGGING AND MONITORING CONFIGURATION
+# ===================================================================
+logging:
+  level:
+    com.supply.chain.microservice: INFO
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+    org.springframework.cloud: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: INFO
+  pattern:
+    # Enhanced console pattern with correlation IDs
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr([%X{traceId:-},%X{spanId:-}]){blue} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    # File pattern for log aggregation
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] [%X{userId:-}] [%X{requestId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/${spring.application.name}.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+# Enhanced Management/Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,httptrace,auditevents,beans,env,flyway,caches,threaddump,heapdump
+      base-path: /actuator
+      cors:
+        allowed-origins: "*"
+        allowed-methods: GET,POST
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      group:
+        custom:
+          include: db,diskSpace,redis
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    loggers:
+      enabled: true
+    httptrace:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 60s
+        descriptions: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99,0.999
+        http.client.requests: 0.5,0.95,0.99
+      sla:
+        http.server.requests: 100ms,200ms,500ms,1s,2s,5s
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+      instance: ${eureka.instance.instance-id:${spring.application.name}:${server.port}}
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+
+# Distributed Tracing Configuration
+spring:
+  sleuth:
+    sampler:
+      probability: 1.0  # Sample 100% in dev, reduce in prod
+    zipkin:
+      base-url: http://localhost:9411
+      enabled: true
+  cloud:
+    discovery:
+      enabled: true
