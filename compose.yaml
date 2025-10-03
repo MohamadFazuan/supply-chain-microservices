@@ -7,10 +7,8 @@ services:
     container_name: supply-chain-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: supply_chain_db
-      MYSQL_USER: supply_user
-      MYSQL_PASSWORD: supply_pass
     ports:
       - "3306:3306"
     volumes:
@@ -83,6 +81,25 @@ services:
       - supply-chain-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: supply-chain-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - supply-chain-network
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3

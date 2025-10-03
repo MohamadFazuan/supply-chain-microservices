@@ -2,6 +2,7 @@ package com.supply.chain.microservice.common.monitoring;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,9 @@ public class MetricsService {
 
     public void recordSystemHealth(String component, boolean healthy) {
         String status = healthy ? "healthy" : "unhealthy";
-        meterRegistry.gauge("supply.chain.system.health", "component", component, "status", status, healthy ? 1 : 0);
+        meterRegistry.gauge("supply.chain.system.health", 
+            Tags.of("component", component, "status", status), 
+            healthy ? 1 : 0);
     }
 
     // AI Service Specific Metrics
@@ -82,7 +85,9 @@ public class MetricsService {
         String status = success ? "success" : "failure";
         getCounter("supply.chain.ai.responses", "provider", provider, "status", status).increment();
         getTimer("supply.chain.ai.response.time", "provider", provider).record(responseTime);
-        meterRegistry.gauge("supply.chain.ai.tokens.used", "provider", provider, tokensUsed);
+        meterRegistry.gauge("supply.chain.ai.tokens.used", 
+            Tags.of("provider", provider), 
+            tokensUsed);
     }
 
     // Security Metrics
@@ -116,9 +121,15 @@ public class MetricsService {
     // Batch metrics recording
     public void recordBatchMetrics(String operation, int batchSize, Duration duration, int successCount, int failureCount) {
         getCounter("supply.chain.batch.operations", "operation", operation).increment();
-        meterRegistry.gauge("supply.chain.batch.size", "operation", operation, batchSize);
+        meterRegistry.gauge("supply.chain.batch.size", 
+            Tags.of("operation", operation), 
+            batchSize);
         getTimer("supply.chain.batch.duration", "operation", operation).record(duration);
-        meterRegistry.gauge("supply.chain.batch.success.count", "operation", operation, successCount);
-        meterRegistry.gauge("supply.chain.batch.failure.count", "operation", operation, failureCount);
+        meterRegistry.gauge("supply.chain.batch.success.count", 
+            Tags.of("operation", operation), 
+            successCount);
+        meterRegistry.gauge("supply.chain.batch.failure.count", 
+            Tags.of("operation", operation), 
+            failureCount);
     }
 }

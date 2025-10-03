@@ -49,7 +49,37 @@ A comprehensive microservices architecture built with **Java 21**, **Spring Boot
 └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
 
-## 📑 Table of Contents
+## �️ Frontend Dashboard
+
+### Minimalist Black & White UI
+A clean, terminal-inspired interface that provides complete access to all microservices:
+
+#### **Features**
+- **Minimalist Design**: Black background, white text, monospace font
+- **Real-time Monitoring**: Live service status and health checks
+- **Complete Service Integration**: Full access to all microservice endpoints
+- **Authentication**: JWT-based login system
+- **Responsive Design**: Works on desktop and mobile devices
+
+#### **Dashboard Sections**
+- **DASHBOARD**: System overview, service status, performance metrics
+- **AUTHENTICATION**: User login/registration, session management
+- **PRODUCTS**: Product management, inventory, pricing
+- **CREDENTIALS**: Secure credential storage and management
+- **AI_SERVICES**: AI request submission and history tracking
+- **SYSTEM_STATUS**: Detailed service health and monitoring tools
+
+#### **Quick Access**
+```bash
+# Access the frontend dashboard
+http://localhost:3000
+
+# Default test credentials (after registration)
+Username: admin
+Password: admin123
+```
+
+## �📑 Table of Contents
 
 - [🚀 Features](#-features)
 - [📋 Prerequisites](#-prerequisites)
@@ -132,6 +162,7 @@ docker-compose up --build
 # 4. Verify deployment
 curl http://localhost:8761  # Eureka Dashboard
 curl http://localhost:8080/health  # API Gateway Health
+curl http://localhost:3000  # Frontend Dashboard
 ```
 
 🎉 **That's it!** Your supply chain microservices are now running with:
@@ -202,6 +233,7 @@ mvn spring-boot:run
 ```
 
 ### 5. Verify Deployment
+- **Frontend Dashboard**: http://localhost:3000
 - **Eureka Dashboard**: http://localhost:8761
 - **API Gateway**: http://localhost:8080
 - **Config Server**: http://localhost:8888
@@ -236,6 +268,7 @@ JWT_EXPIRATION=86400
 ### Service Ports
 | Service | Port | Description |
 |---------|------|-------------|
+| Frontend Dashboard | 3000 | Minimalist UI |
 | API Gateway | 8080 | Main entry point |
 | Auth Service | 8081 | Authentication |
 | Product Service | 8082 | Product management |
